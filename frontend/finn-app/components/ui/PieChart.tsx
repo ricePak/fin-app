@@ -39,7 +39,7 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data, title }) => {
             {chartData.map((item, index) => (
                 <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
                     <View style={{ width: 20, height: 20, backgroundColor: item.color, marginRight: 5 }} />
-                    <Text>{`${item.name}: ${item.population}`}</Text>
+                    <Text>{`${item.name}: $${item.population}`}</Text>
                 </View>
             ))}
         </View>
