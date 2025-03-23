@@ -62,7 +62,7 @@ export default function HomeScreen() {
           <View style={{ borderWidth: 2, borderStyle: 'dashed', borderColor: ColorPalette['dark-green'], minWidth: 80, borderRadius: 8, paddingHorizontal: 20, justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ fontSize: 40, color: ColorPalette['dark-green'] }}>+</Text>
           </View>
-          {userDataSample.accounts.map((card) => <View style={{ borderWidth: 2, borderColor: ColorPalette['dark-green'], borderRadius: 8, minWidth: 80, paddingHorizontal: 20, backgroundColor: '#003649', position: 'relative' }}>
+          {userDataSample.accounts.map((card, index) => <View key={index} style={{ borderWidth: 2, borderColor: ColorPalette['dark-green'], borderRadius: 8, minWidth: 80, paddingHorizontal: 20, backgroundColor: '#003649', position: 'relative' }}>
             <Text style={{ fontSize: 9, color: '#FFFFFF', position: 'absolute', top: 4, left: 4 }}>{card.type}</Text>
             <Text style={{ fontSize: 9, color: '#FFFFFF', position: 'absolute', bottom: 4, right: 4, width: 50, textAlign: 'right' }}>***{card.number}</Text>
           </View>)}
@@ -72,8 +72,8 @@ export default function HomeScreen() {
           <Trendline selected={timeInterval}/>
         </View>
         <View style={{ backgroundColor: '#FFFFFF', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, borderWidth: 1, borderColor: 'transparent', borderRadius: 8, flexDirection: 'column', padding: 12, gap: 12 }}>
-          {userDataSample.categories[timeInterval.toLowerCase()].map((expense) => {
-            return <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+          {userDataSample.categories[timeInterval.toLowerCase()].map((expense, id: any) => {
+            return <View key={id} style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
                     <View style={{ flexGrow: 1 }}>
                       <Text style={{ fontSize: 20 }}>{capitalizeFirstLetter(expense.name)} expenses</Text>
                       <Text>Budgeted: ${formatNumber(expense.budget)}</Text>

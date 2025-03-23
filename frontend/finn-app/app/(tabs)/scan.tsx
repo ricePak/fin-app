@@ -13,14 +13,67 @@ import { TextInput } from 'react-native';
 import React, { useState } from 'react';
 import { KeyboardAvoidingView } from 'react-native';
 import { ColorPalette } from '@/constants/Colors';
+import PieChart from '@/components/ui/PieChart';
+
+import axios from 'axios';
+
+const api = axios.create({
+  baseURL: 'https://finnapp.demo.creacards.ca',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
 export default function TabTwoScreen() {
-  const [messages, setMessages] = useState([
-    { id: 1, text: 'Hello!', sender: 'human' },
-    { id: 2, text: 'Hi there!', sender: 'bot' },
-  ]);
+  const [messages, setMessages] = useState<any>([]);
 
   const [newMessage, setNewMessage] = useState(''); 
+  const [isError, setIsError] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [pieChart, setPieChart] = useState<any>(null);
+
+  const chatAPI = async (prompt: String) => {
+    try {
+      const body = {
+        prompt: prompt
+      }
+      const response = await api.post('/api/chat', body);
+      console.log("chatapi success", response.data);
+      return response.data;
+    } catch (error) {
+      console.error('chatapi error:', error);
+      setIsError(true);
+    }
+  };
+  
+  const chatBotToolAPI = async (userMessage: string, message: any) => {
+    try {
+      const body = message;
+      const response = await api.post('/api/chatbot-tool', body);
+      console.log("chatbottool success", response.data);
+      setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, { id: messages.length + 2, text: response.data.message.text, sender: 'bot' }]);
+      if (response.data.message.tools.length > 0) {
+        console.log("in if statement", response.data.message.tools[0]);
+        setPieChart(response.data.message.tools[0]);
+        console.log("piechart");
+      }
+      const botMessage = response.data.message.text;
+      return response.data;
+    } catch (error) {
+      console.error('chatbottool error:', error);
+      setIsError(true);
+    }
+  };
+
+  const askChatbot = async (userMessage: string, prompt: string) => {
+    const response = await chatAPI(prompt);
+    if (response.remark) {
+      chatBotToolAPI(userMessage, response.message);
+    } else {
+      setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, { id: messages.length + 2, text: response.message.text, sender: 'bot' }]);
+      return response.message;
+    }
+  }
 
   const messageBoxStyle = {
     backgroundColor: '#FFFFFF',
@@ -35,6 +88,17 @@ export default function TabTwoScreen() {
     right: 0,
   };
 
+  const handleSendMessage = () => {
+    if (newMessage.length === 0) return;
+    setMessages([...messages, { id: messages.length + 1, text: newMessage, sender: 'human' }]);
+    setIsError(false);
+    setIsLoading(true);
+    console.log("test");
+    const response = askChatbot(newMessage, newMessage);
+    setIsLoading(false);
+    setNewMessage('');
+  };
+
   return (
             <SafeAreaView style={{ flex: 1, flexDirection: 'column', padding: 5, paddingBottom: 32, backgroundColor: '#F8F8F8', gap: 16, width: '100%' }}>
               <ScrollView 
@@ -44,9 +108,28 @@ export default function TabTwoScreen() {
               >
                 {/* Messages area */}
                 <View style={{ flex: 1, width: '100%', gap: 8 }}>
-                {messages.map((message) => (
+                <View style={{flexDirection: 'row', justifyContent: 'center', backgroundColor: '#FFFFFF', padding: 8, borderRadius: 8, marginBottom: 16}}>
+                  <Image source={require('../../assets/images/fin_normal.png')} style={{
+                    width: 100, // Adjusted width
+                    height: 100, // Adjusted height
+                    resizeMode: 'contain', // Scale image properly
+                    marginLeft: 0, // Translate the image left
+                    marginRight: 0, // Add spacing to the right of the image for the text
+                  }} />
+                </View>
+                <Text 
+                  style={{
+                  width: '100%',
+                  textAlign: 'center',
+                  paddingBottom: 32,
+                  color: ColorPalette['dark-green']
+                  }}
+                >
+                  Hi, Im Fin! I will help you with your personal Finance, type a prompt to get started!
+                </Text>
+                {messages.map((message: any, id:number) => (
                   <View
-                  key={message.id}
+                  key={id}
                   style={{
                     backgroundColor: message.sender === 'bot' ? '#D1E7DD' : '#E0E0E0',
                     padding: 10,
@@ -54,10 +137,30 @@ export default function TabTwoScreen() {
                     alignSelf: message.sender === 'human' ? 'flex-end' : 'flex-start',
                   }}
                   >
-                  <Text>{message.text}</Text>
+                    <Text>{message.text}</Text>
                   </View>
                 ))}
                 </View>
+                {isError && <Text style={{ color: ColorPalette['red']}}>Oops! An error occurred. Please try again...</Text>}
+                {isLoading && <View>
+                  <Text style={{ color: ColorPalette['dark-green'], fontWeight: 'bold' }}>Hm... thinking...</Text>
+                </View>}
+                {/*<PieChart
+            data={
+              {first: "$46.63 Amazon", 
+              second: "$36.30 Netflix",
+              third: "$41.45 Target", 
+              }
+            }
+            title={"Spending on 2021-02-10"}
+          />*/}
+              {/*<PieChart
+                data={{first: "$46.63 Amazon", 
+              second: "$36.30 Netflix",
+              third: "$41.45 Target", 
+              }}
+                title={"Spending on 2021-02-10"}
+              />*/}
               </ScrollView>
               {/* Input area */}
               <KeyboardAvoidingView
@@ -75,12 +178,7 @@ export default function TabTwoScreen() {
                 size={24}
                 color={ColorPalette['dark-green']}
                 style={{ marginLeft: 8 }}
-                onPress={() => {
-                  if (newMessage.trim()) {
-                  setMessages([...messages, { id: Date.now(), text: newMessage, sender: 'human' }]);
-                  setNewMessage('');
-                  }
-                }}
+                onPress={handleSendMessage}
                 />
               </KeyboardAvoidingView>
               <View style={{ minHeight: 20 }}></View>
