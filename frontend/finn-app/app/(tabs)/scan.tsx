@@ -16,6 +16,10 @@ import { ColorPalette } from '@/constants/Colors';
 import PieChart from '@/components/ui/PieChart';
 
 import axios from 'axios';
+import { launchCamera } from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert } from 'react-native';
 
 const api = axios.create({
   baseURL: 'https://finnapp.demo.creacards.ca',
@@ -31,6 +35,8 @@ export default function TabTwoScreen() {
   const [isError, setIsError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [pieChart, setPieChart] = useState<any>(null);
+
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
 
   const chatAPI = async (prompt: String) => {
     try {
@@ -157,6 +163,94 @@ export default function TabTwoScreen() {
     setNewMessage('');
   };
 
+  async function requestPermissions() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photos.');
+    }
+  
+    const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+    if (cameraStatus.status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your camera.');
+    }
+  }
+
+  async function pickImage() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+  
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      console.log('Selected image URI:', uri);
+      // You can now use the `uri` to display or upload the image
+    }
+  }
+
+  async function takePhoto() {
+    console.log('Taking photo...');
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+  
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      //console.log('Taken photo URI:', uri);
+
+      // Convert the image to base64
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onloadend = () => {
+      const base64data = reader.result as string;
+      setIsError(false);
+      chatPhotoAPI(base64data, uri);
+
+      
+
+      setPhotoBase64(base64data);
+      console.log('Base64 encoded image:', base64data.substring(0, 200));
+      };
+      reader.readAsDataURL(blob);
+    }
+  }
+
+  const chatPhotoAPI = async (base64data: string, uri: string) => {
+    setMessages([...messages, { id: messages.length + 1, 
+      text:<Image source={{ uri: uri }} style={{ width: 100, height: 100, borderRadius: 8 }} />,
+      sender: 'human'}, { id: messages.length + 2, text: "Scanning the receipt...😊", sender: 'bot' }]);
+
+    try {
+      const body = {
+        image: base64data //change header
+      }
+      const response = await api.post('/api/receipt', body);
+      
+      if (typeof response.data.message === "string") {
+        console.log("chatphotoapi success", response.data);
+        setMessages([...messages, { id: messages.length + 1, 
+          text:<Image source={{ uri: uri }} style={{ width: 100, height: 100, borderRadius: 8 }} />, 
+          sender: 'human'}, { id: messages.length + 2, text: response.data.message, sender: 'bot' }]);
+      } else {
+        console.log("chatphotoapi success", response.data);
+        setMessages([...messages, { id: messages.length + 1, 
+          text:<Image source={{ uri: uri }} style={{ width: 100, height: 100, borderRadius: 8 }} />, 
+          sender: 'human'}, { id: messages.length + 2, text: response.data.message.text, sender: 'bot' }]);
+      }
+
+
+      return response.data;
+    } catch (error) {
+      console.error('chatphotoapi error:', error);
+      setIsError(true);
+    }
+  }
+
   return (
             <SafeAreaView style={{ flex: 1, flexDirection: 'column', padding: 5, paddingBottom: 32, backgroundColor: '#F8F8F8', gap: 16, width: '100%' }}>
               <ScrollView 
@@ -183,7 +277,7 @@ export default function TabTwoScreen() {
                   color: ColorPalette['dark-green']
                   }}
                 >
-                  Hi, Im Fin! I will help you with your personal Finance, type a prompt to get started!
+                  Hi, Im Fin! I will help you with your personal Finance, type a prompt to get started! Alternatively, click the camera icon to scan a receipt and track expenses.
                 </Text>
                 {messages.map((message: any, id:number) => (
                   <View
@@ -221,24 +315,37 @@ export default function TabTwoScreen() {
               />*/}
               </ScrollView>
               {/* Input area */}
-              <KeyboardAvoidingView
+                <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flexDirection: 'row', alignItems: 'center', padding: 8, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E0E0E0' }}
-              >
+                >
+                <MaterialIcon
+                  name="camera-alt"
+                  size={24}
+                  color={ColorPalette['dark-green']}
+                  style={{ marginRight: 8 }}
+                  onPress={async () => {
+                    // Logic to open the phone camera
+                    console.log('request permissions...');
+                    await requestPermissions();
+                    console.log("take photo...");
+                    await takePhoto();
+                  }}
+                />
                 <TextInput
-                style={{ flex: 1, height: 40, borderColor: '#E0E0E0', borderWidth: 1, borderRadius: 8, paddingHorizontal: 8 }}
-                placeholder="Type a message..."
-                value={newMessage}
-                onChangeText={setNewMessage}
+                  style={{ flex: 1, height: 40, borderColor: '#E0E0E0', borderWidth: 1, borderRadius: 8, paddingHorizontal: 8 }}
+                  placeholder="Type a message..."
+                  value={newMessage}
+                  onChangeText={setNewMessage}
                 />
                 <MaterialIcon
-                name="send"
-                size={24}
-                color={ColorPalette['dark-green']}
-                style={{ marginLeft: 8 }}
-                onPress={handleSendMessage}
+                  name="send"
+                  size={24}
+                  color={ColorPalette['dark-green']}
+                  style={{ marginLeft: 8 }}
+                  onPress={handleSendMessage}
                 />
-              </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
               <View style={{ minHeight: 20 }}></View>
             </SafeAreaView>
   );
