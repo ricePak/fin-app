@@ -8,6 +8,10 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+import { Text } from 'react-native';
+
 import "@/global.css";
 
 export default function TabLayout() {
@@ -16,30 +20,42 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: "#6D8B76",
+        tabBarInactiveTintColor: '#000000',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        tabBarBackground: () => <TabBarBackground />,
+        tabBarStyle: {
+          position: 'absolute',
+          bottom:0
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: '',
+          tabBarIcon: ({ color, focused }) => <Icon color={focused ? color : Colors[colorScheme ?? 'light'].tabIconDefault} name="home" size={30}/>,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="scan"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: '',
+          tabBarIcon: ({ color, focused }) => <Icon color={focused ? color : Colors[colorScheme ?? 'light'].tabIconDefault} name="camera-alt" size={28}/>,
+        }}
+      />
+      <Tabs.Screen
+        name="transactions"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => <Icon color={focused ? color : Colors[colorScheme ?? 'light'].tabIconDefault} name="attach-money" size={30}/>,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: '',
+          tabBarIcon: ({ color, focused }) => <Icon color={focused ? color : Colors[colorScheme ?? 'light'].tabIconDefault} name="settings" size={28}/>,
         }}
       />
     </Tabs>
