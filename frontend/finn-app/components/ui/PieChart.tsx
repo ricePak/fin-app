@@ -25,8 +25,8 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data, title }) => {
             <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>{title}</Text>
             <PieChart
                 data={chartData}
-                width={Dimensions.get('window').width - 20} // Adjust width as needed
-                height={220}
+                width={Dimensions.get('window').width - 80} // Adjust width as needed
+                height={100}
                 chartConfig={{
                     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                 }}

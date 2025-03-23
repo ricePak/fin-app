@@ -52,9 +52,31 @@ export default function TabTwoScreen() {
       const response = await api.post('/api/chatbot-tool', body);
       console.log("chatbottool success", response.data);
       setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, { id: messages.length + 2, text: response.data.message.text, sender: 'bot' }]);
-      if (response.data.message.tools.length > 0) {
+      
+      if (typeof response.data.message === "string") {
+        setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, 
+          { id: messages.length + 2, text: response.data.message, sender: 'bot' }]);
+        return response.data;
+      }
+      
+      if (response.data.message.tools && response.data.message.tools.length > 0) {
         console.log("in if statement", response.data.message.tools[0]);
-        setPieChart(response.data.message.tools[0]);
+        //setPieChart(response.data.message.tools[0]);
+        setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, 
+        { id: messages.length + 2, text: 
+        <View>
+          <Text>Pie chart:</Text>
+          <PieChart
+          data={
+            {first: response.data.message.tools[0].args.first, 
+            second: response.data.message.tools[0].args.second,
+            third: response.data.message.tools[0].args.third, 
+            }
+          }
+          title={response.data.message.tools[0].args.name}
+          />
+        </View>, 
+        sender: 'bot' }]);
         console.log("piechart");
       }
       const botMessage = response.data.message.text;
@@ -67,10 +89,46 @@ export default function TabTwoScreen() {
 
   const askChatbot = async (userMessage: string, prompt: string) => {
     const response = await chatAPI(prompt);
+    if (!response) {
+      setIsError(true);
+      return;
+    }
+    
     if (response.remark) {
+      console.log("remark is defined", response.remark);
       chatBotToolAPI(userMessage, response.message);
     } else {
-      setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, { id: messages.length + 2, text: response.message.text, sender: 'bot' }]);
+      console.log("remark is not defined", response.message);
+      /*if (response.message.tools.length === 0) {
+        setMessages([]);
+      }*/
+      
+      console.log("test");
+      if (response.message.tools?.length > 0) {
+        console.log("tools greater than 0", response.message.tools);
+        setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, 
+          { id: messages.length + 2, 
+            text: <View>
+            <Text>Pie chart:</Text>
+            <PieChart
+            data={
+              {first: response.message.tools[0].args.first, 
+              second: response.message.tools[0].args.second,
+              third: response.message.tools[0].args.third, 
+              }
+            }
+            title={response.message.tools[0].args.name}
+            />
+          </View>, 
+            
+            sender: 'bot' }]);
+        return;
+      }
+      console.log("here", response.message);
+      console.log("does tools exist", response.tools);
+      const botMessage = typeof response.message === "string" ? response.message : response.message.text;
+      console.log("botMessage", botMessage);
+      setMessages([...messages, { id: messages.length + 1, text:userMessage, sender: 'human'}, { id: messages.length + 2, text: botMessage, sender: 'bot' }]);
       return response.message;
     }
   }
@@ -154,7 +212,7 @@ export default function TabTwoScreen() {
             }
             title={"Spending on 2021-02-10"}
           />*/}
-              {/*<PieChart
+              {/*pieChart && <PieChart
                 data={{first: "$46.63 Amazon", 
               second: "$36.30 Netflix",
               third: "$41.45 Target", 
