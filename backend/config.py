@@ -1,3 +1,5 @@
 import os
+import dotenv
 
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+dotenv.load_dotenv()
+OPENAI_API_KEY = "--redated--"

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 # database-like repository for demo data
 
 class DemoUser:
@@ -189,6 +191,26 @@ class DemoUser:
             'summary': DemoUser.summary_transactions(DemoUser.raw_transactions)
         }
     
+    @staticmethod
+    def get_transaction_summary(start, end):
+        start_date = datetime.strptime(start, '%Y-%m-%d')
+        end_date = datetime.strptime(end, '%Y-%m-%d')
+
+        filtered_transactions = [
+            transaction for transaction in DemoUser.raw_transactions
+            if start_date <= datetime.strptime(transaction['date'], '%Y-%m-%d') <= end_date
+        ]
+
+        return {
+            'total_transactions': len(filtered_transactions),
+            'total_amount': sum([transaction['amount'] for transaction in filtered_transactions]),
+            'summary': DemoUser.summary_transactions(filtered_transactions)
+        }
+    
+    @staticmethod
+    def get_memory():
+        return DemoUser.user_chatbot_pref
+
     @staticmethod
     def summary_transactions(transactions):
         summary = ''
