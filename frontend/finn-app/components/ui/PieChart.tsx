@@ -26,7 +26,7 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data, title }) => {
             <PieChart
                 data={chartData}
                 width={Dimensions.get('window').width - 80} // Adjust width as needed
-                height={100}
+                height={150}
                 chartConfig={{
                     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
                 }}
@@ -34,7 +34,14 @@ const PieChartComponent: React.FC<PieChartProps> = ({ data, title }) => {
                 backgroundColor="transparent"
                 paddingLeft="15"
                 absolute
+                hasLegend={false} // Disable the legend
             />
+            {chartData.map((item, index) => (
+                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+                    <View style={{ width: 20, height: 20, backgroundColor: item.color, marginRight: 5 }} />
+                    <Text>{`${item.name}: ${item.population}`}</Text>
+                </View>
+            ))}
         </View>
     );
 };
