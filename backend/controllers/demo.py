@@ -32,7 +32,11 @@ def route_response(response):
 @api.route('/chat', methods=['POST'])
 def chatbot():
     response =  general_prompt(request.json['prompt'])
-    
+    return route_response(response)
+
+@api.route('/receipt', methods=['POST'])
+def receipt():
+    response = general_prompt(request.json['image'], isImage=True)
     return route_response(response)
 
 # depreciate in future - websocket will be used
