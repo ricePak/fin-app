@@ -41,7 +41,7 @@ export default function TabLayout() {
         name="scan"
         options={{
           title: '',
-          tabBarIcon: ({ color, focused }) => <Icon color={focused ? color : Colors[colorScheme ?? 'light'].tabIconDefault} name="camera-alt" size={28}/>,
+          tabBarIcon: ({ color, focused }) => <Icon color={focused ? color : Colors[colorScheme ?? 'light'].tabIconDefault} name="lightbulb" size={28}/>,
         }}
       />
       <Tabs.Screen
